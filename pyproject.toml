@@ -1,0 +1,31 @@
+[project]
+name = "langgraph-decision-team"
+version = "0.1.0"
+description = "A multi-agent decision-support workflow built with LangGraph."
+readme = "README.md"
+authors = [
+    { name = "samahali", email = "samahali9226@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-openai>=1.6.0",
+    "langgraph>=1.2.11",
+    "langsmith>=0.12.1",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.3",
+]
+
+[project.scripts]
+langgraph-decision-team = "langgraph_decision_team:main"
+
+[build-system]
+requires = ["uv_build>=0.11.26,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.5",
+]

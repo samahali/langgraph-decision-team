@@ -15,17 +15,6 @@ class Plan(BaseModel):
     )
 
 
-class ResearchNotes(BaseModel):
-    """Structured findings produced by the researcher node."""
-
-    notes: list[str] = Field(
-        description=(
-            "Concise, standalone findings needed to answer the user's question. "
-            "Do not include Markdown headings or bullet characters."
-        )
-    )
-    
-
 class Critique(BaseModel):
     """Structured evaluation produced by the critic node."""
 

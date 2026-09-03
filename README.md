@@ -2,12 +2,12 @@
 
 > Evidence-backed decisions with human approval — powered by a multi-agent LangGraph workflow and a live React interface.
 
-A six-agent decision-support system that plans your question, researches live web sources, writes a draft, critiques its own work, and stops at your desk for approval — not a single fact hallucinated, not a single action taken without your say-so.
+A six-stage decision-support system that plans your question, researches live web sources, writes a draft, critiques its own work, and stops at your desk for approval. It is designed to reduce unsupported claims and excessive agency; it does not claim that hallucinations are impossible.
 
 ## What it does
 
 1. **Planner** breaks your question into ordered research steps and identifies risks.
-2. **Researcher** searches the web for authoritative, cited evidence (read-only — no tool execution).
+2. **Researcher** uses only read-only web search for authoritative, cited evidence.
 3. **Writer** drafts a structured answer using the research and plan.
 4. **Critic** evaluates the draft against the plan, assigns a 0–100 quality score, and prescribes fixes.
 5. **Finalizer** produces the polished final answer with sources.
@@ -21,7 +21,7 @@ Low scores trigger automatic revision cycles. Human feedback resets the critic b
 
 - Python 3.12+ with [uv](https://docs.astral.sh/uv/)
 - Node.js 22+ with npm
-- An OpenAI API key with web-search capability (gpt-4o-mini or gpt-4o)
+- An OpenAI API key and a model that supports the Responses API `web_search` tool
 
 ### 1. Configure the backend
 
@@ -100,7 +100,7 @@ All configuration is environment-based. See `.env.example` for the full list:
 | `MAX_HUMAN_REVISIONS` | `2` | Max human-requested revisions before the answer is locked |
 | `QUALITY_THRESHOLD` | `80` | Minimum Critic score (0–100) to skip revision |
 | `MAX_RESEARCH_SOURCES` | `10` | Cap on web-search result URLs collected per query |
-| `THREAD_ACCESS_SECRET` | *(insecure default)* | HMAC signing key for thread access tokens |
+| `THREAD_ACCESS_SECRET` | *(required)* | HMAC signing key for thread access tokens; minimum 32 characters |
 | `CHECKPOINT_DB` | `checkpoints.sqlite` | SQLite checkpoint file path |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed CORS origins |
 | `LANGSMITH_API_KEY` | — | LangSmith tracing (optional but recommended) |
@@ -219,12 +219,14 @@ Submit a human review decision to a paused workflow.
     │   ├── types/
     │   │   └── workflow.ts          # StreamEvent discriminated unions
     │   ├── components/
+    │   │   ├── error-boundary.tsx
     │   │   ├── markdown-article.tsx
     │   │   ├── result-panel.tsx
     │   │   ├── review-panel.tsx
     │   │   ├── workflow-progress.tsx
     │   │   └── ui/                  # shadcn-style component primitives
     │   └── lib/utils.ts             # clsx + tailwind-merge helper
+    ├── vitest.config.ts              # jsdom test + coverage configuration
     └── vite.config.ts
 ```
 
@@ -246,6 +248,8 @@ uv run pytest --cov=src          # test with coverage
 cd frontend
 npm install
 npm run lint
+npm test
+npm run test:coverage
 npm run build
 ```
 
@@ -256,9 +260,14 @@ uv run pytest --cov=src --cov-report=term-missing
 ```
 
 ```
-35 passed in ~11s
-Coverage: 83% overall (100% for config, schemas, state, prompts)
+Backend: 35 tests, 83% statement coverage
+Frontend: 4 tests, 83% statement coverage, 64.44% branch coverage
+npm audit: 0 vulnerabilities
 ```
+
+GitHub Actions runs linting, formatting, type checking, tests, dependency
+audit, coverage enforcement, and production builds on every push and pull
+request.
 
 See [EVALUATION_REPORT.md](EVALUATION_REPORT.md) for a detailed assessment of
 code quality, test coverage gaps, security findings, and a prioritized

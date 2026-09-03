@@ -39,10 +39,7 @@ def get_settings() -> Settings:
             if origin.strip()
         ),
         max_research_sources=int(os.getenv("MAX_RESEARCH_SOURCES", "10")),
-        thread_access_secret=os.getenv(
-            "THREAD_ACCESS_SECRET",
-            "development-only-thread-access-secret-change-me",
-        ),
+        thread_access_secret=os.getenv("THREAD_ACCESS_SECRET", ""),
     )
 
     if settings.max_iterations < 1:

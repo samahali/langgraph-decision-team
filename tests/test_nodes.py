@@ -132,9 +132,21 @@ def test_researcher_rejects_untrusted_urls_and_caps_sources(
                 "type": "text",
                 "text": "Finding",
                 "annotations": [
-                    {"type": "url_citation", "title": "Bad", "url": "javascript:alert(1)"},
-                    {"type": "url_citation", "title": "Good", "url": "https://example.com"},
-                    {"type": "url_citation", "title": "Ignored", "url": "https://other.example"},
+                    {
+                        "type": "url_citation",
+                        "title": "Bad",
+                        "url": "javascript:alert(1)",
+                    },
+                    {
+                        "type": "url_citation",
+                        "title": "Good",
+                        "url": "https://example.com",
+                    },
+                    {
+                        "type": "url_citation",
+                        "title": "Ignored",
+                        "url": "https://other.example",
+                    },
                 ],
             },
         ],

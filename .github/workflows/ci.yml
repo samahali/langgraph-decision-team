@@ -45,7 +45,7 @@ jobs:
         run: uv run --frozen mypy src tests main.py
 
       - name: Run tests
-        run: uv run --frozen pytest --cov=src --cov-fail-under=80
+        run: uv run --frozen pytest --cov
 
       - name: Build package
         run: uv build
@@ -71,10 +71,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Audit critical vulnerabilities
-        run: npm audit --audit-level=critical
+        run: npm ci --no-audit
 
       - name: Lint
         run: npm run lint

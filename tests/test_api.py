@@ -107,3 +107,46 @@ async def test_blank_question_is_rejected(client: AsyncClient) -> None:
     response = await client.post("/runs", json={"question": "   "})
 
     assert response.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_approval_returns_404_for_unknown_thread(
+    monkeypatch: pytest.MonkeyPatch,
+    client: AsyncClient,
+) -> None:
+    monkeypatch.setattr(api, "thread_exists", lambda _thread_id: False)
+
+    response = await client.post(
+        "/runs/missing-thread/approval",
+        json={"action": "approve"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Workflow thread not found.",
+    }
+
+
+def test_workflow_events_returns_safe_error_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def raise_database_error(_connection_string: str):
+        raise RuntimeError("Database unavailable")
+
+    monkeypatch.setattr(
+        api.SqliteSaver,
+        "from_conn_string",
+        raise_database_error,
+    )
+
+    events = list(
+        api.workflow_events(
+            graph_input=None,
+            thread_id="thread-1",
+        )
+    )
+
+    assert len(events) == 1
+    assert '"type": "error"' in events[0]
+    assert '"message": "Workflow failed. Please retry."' in events[0]
+    assert "Database unavailable" not in events[0]

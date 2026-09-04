@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A multi-agent decision-support workflow built with LangGraph."
 readme = "README.md"
 authors = [
-    { name = "samahali", email = "samahali9226@gmail.com" }
+    { name = "Samah Ali" }
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -18,8 +18,9 @@ dependencies = [
     "uvicorn>=0.52.4",
 ]
 
-[project.scripts]
-langgraph-decision-team = "langgraph_decision_team:main"
+[project.urls]
+Repository = "https://github.com/samahali/langgraph-decision-team"
+Issues = "https://github.com/samahali/langgraph-decision-team/issues"
 
 [build-system]
 requires = ["uv_build>=0.11.26,<0.12.0"]
@@ -33,3 +34,30 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.5",
 ]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["langgraph_decision_team"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
+
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_configs = true

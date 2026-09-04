@@ -53,6 +53,17 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+### Run with Docker Compose
+
+After creating `.env`, build and start both services:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:3000`. Nginx serves the frontend and proxies `/api` to
+FastAPI. Workflow checkpoints persist in the `checkpoint-data` named volume.
+
 ### 4. Try the CLI
 
 ```bash

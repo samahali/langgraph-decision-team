@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: .
+    env_file:
+      - .env
+    environment:
+      THREAD_ACCESS_SECRET: ${THREAD_ACCESS_SECRET:?Set THREAD_ACCESS_SECRET in .env}
+      CHECKPOINT_DB: /app/data/checkpoints.sqlite
+      CORS_ORIGINS: http://localhost:3000
+    volumes:
+      - checkpoint-data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  checkpoint-data:

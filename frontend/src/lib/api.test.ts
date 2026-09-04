@@ -36,7 +36,7 @@ describe("consumeWorkflowStream", () => {
 
     expect(events).toEqual([{ type: "node", node: "planner", data: {} }]);
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/runs/thread-1/approval",
+      "/api/runs/thread-1/approval",
       expect.objectContaining({
         headers: expect.objectContaining({
           Accept: "text/event-stream",

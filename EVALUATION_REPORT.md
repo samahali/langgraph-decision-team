@@ -1,8 +1,8 @@
 # Evaluation Report — LangGraph Decision Team
 
-**Evaluation date:** September 3, 2026  
+**Evaluation date:** September 4, 2026
 **Scope:** backend, graph behavior, API contract, frontend, security controls,
-tests, and CI  
+tests, containers, and CI
 **Method:** static review plus reproducible local quality gates
 
 ## Executive summary
@@ -13,15 +13,18 @@ SQLite persistence, a streaming FastAPI boundary, and a typed React UI.
 
 The evaluated workspace passes every configured quality gate:
 
-- 35 backend tests pass with 83% statement coverage.
+- 37 backend tests pass with at least 80% configured coverage.
 - 4 frontend tests pass with 83% statement coverage.
 - Ruff lint and formatting pass.
 - Mypy checks pass for all 16 Python source/test files.
 - ESLint, TypeScript, and the Vite production build pass.
 - `npm audit` reports zero known vulnerabilities.
 - GitHub Actions enforces the same checks for pushes and pull requests.
+- Backend and frontend images build successfully and pass container smoke tests.
+- The Compose stack reaches healthy state and preserves checkpoints in a named
+  volume.
 
-**Assessment: 8.2/10 for MVP engineering quality.** Production deployment
+**Assessment: 8.5/10 for MVP engineering quality.** Production deployment
 still needs user authentication, rate limiting, observability, and real-model
 answer-quality evaluation.
 
@@ -56,7 +59,7 @@ uv run pytest --cov=src --cov-report=term-missing
 
 | Gate | Result |
 |---|---:|
-| Tests | 35 passed |
+| Tests | 37 passed |
 | Statement coverage | 83% |
 | Ruff lint | Pass |
 | Ruff formatting | Pass |
@@ -103,6 +106,35 @@ npm audit --audit-level=critical
 Tests cover chunked CRLF/multiline SSE parsing, malformed events, signed token
 forwarding, approval error recovery, and the React render error boundary.
 
+### Containers
+
+```bash
+docker compose config --quiet
+docker compose build
+docker compose up --detach --wait
+curl --fail http://localhost:3000/api/health
+```
+
+| Gate | Result |
+|---|---:|
+| Compose configuration | Pass |
+| Backend image build | Pass |
+| Frontend image build | Pass |
+| Backend health check | Pass, `200 OK` |
+| Frontend static content | Pass |
+| Nginx-to-FastAPI proxy | Pass, `200 OK` |
+| Backend runtime user | Non-root `appuser` |
+| Frontend runtime user | Non-root UID 101 |
+| Backend host port | Not published |
+| Backend image size | 194.5 MB |
+| Frontend image size | 54.5 MB |
+
+The backend uses a multi-stage build: `uv` and build inputs remain outside the
+runtime image, while only the locked virtual environment is copied forward.
+The frontend uses Node only during compilation and serves static output from
+unprivileged Nginx. First builds download base images and dependencies; cached
+rebuilds reuse the dependency layers.
+
 ## Architecture assessment
 
 ### Strengths
@@ -117,6 +149,10 @@ forwarding, approval error recovery, and the React render error boundary.
   client-side state boundary.
 - Dependencies are justified; build-only packages live in `devDependencies`.
 - Frontend toolchain versions are pinned instead of using `latest`.
+- Docker build contexts are restricted by backend and frontend
+  `.dockerignore` files.
+- Base images are pinned by digest for reproducible builds.
+- Nginx proxies same-origin `/api` requests and disables buffering for SSE.
 
 ### Trade-offs
 
@@ -143,6 +179,11 @@ Implemented controls:
 - Citation URLs require HTTP(S) and a valid network location.
 - Research sources and both revision loops are capped.
 - Human approval is mandatory before completion.
+- `.env`, SQLite databases, caches, tests, and local build artifacts are
+  excluded from image build contexts.
+- Both runtime containers use non-root users.
+- FastAPI is private to the Compose network; only Nginx publishes a host port.
+- `THREAD_ACCESS_SECRET` is validated by Compose before containers start.
 
 These controls reduce OWASP LLM10 Excessive Agency risk: model access is
 least-privileged, work is bounded, and consequential release remains under
@@ -185,12 +226,15 @@ because model evaluations are slower, probabilistic, and billable.
 
 ## CI quality gate
 
-`.github/workflows/ci.yml` runs two least-privilege jobs:
+`.github/workflows/ci.yml` runs three least-privilege jobs:
 
 - Backend: locked dependency sync, lint, format, typing, tests, and minimum 80%
   coverage.
-- Frontend: clean install, critical vulnerability audit, lint, tests, and
-  production build.
+- Frontend: clean install, lint, tests with coverage, and production build.
+- Docker: independent backend and frontend image builds.
+
+Dependabot tracks both Dockerfiles weekly so pinned base-image digests can
+receive reviewable security updates.
 
 No OpenAI key is required in CI because workflow tests use mock LLMs.
 
@@ -220,9 +264,10 @@ No OpenAI key is required in CI because workflow tests use mock LLMs.
 
 ## Conclusion
 
-Step 11 is complete for engineering evaluation: documentation is reproducible,
-quality gates are automated, both application layers have tests, and known
-limits are explicit. The project is ready for portfolio demonstration and
-controlled MVP use. It should not be described as production-ready until the
-high-priority identity and abuse controls are implemented and real-model output
-quality has a measured baseline.
+Containerization and engineering evaluation are complete: documentation is
+reproducible, quality gates are automated, both application layers have tests,
+container builds are checked in CI, and the full Compose path has passed local
+smoke tests. The project is ready for portfolio demonstration and controlled
+MVP use. It should not be described as production-ready until the high-priority
+identity and abuse controls are implemented and real-model output quality has a
+measured baseline.
